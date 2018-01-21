@@ -1,0 +1,27 @@
+{
+  "name": "botsketeer",
+  "version": "0.0.1",
+  "description": "Slack bot making daily stand up easier",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pat-rice/botsketeer.git"
+  },
+  "keywords": [
+    "slackbot",
+    "standup",
+    "nodejs"
+  ],
+  "author": "Patrice Gargiolo <pat-rice@ntymail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Pat-rice/botsketeer/issues"
+  },
+  "homepage": "https://github.com/Pat-rice/botsketeer#readme",
+  "dependencies": {
+    "@slack/client": "3.15.0"
+  }
+}
