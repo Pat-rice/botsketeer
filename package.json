@@ -4,6 +4,7 @@
   "description": "Slack bot making daily stand up easier",
   "main": "index.js",
   "scripts": {
+    "start": "node src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,6 +23,9 @@
   },
   "homepage": "https://github.com/Pat-rice/botsketeer#readme",
   "dependencies": {
-    "@slack/client": "3.15.0"
+    "@slack/client": "3.15.0",
+    "koa": "2.4.1",
+    "koa-router": "7.3.0",
+    "request": "2.83.0"
   }
 }
