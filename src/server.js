@@ -6,8 +6,12 @@ const router = new Router();
 
 const config = require('./config');
 
+const Reporter = require('./main.js');
+
 const CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
+let botAccessToken;
+let targetChannelId;
 
 router.get('/health', async (ctx, next) => {
   ctx.body = {status: 'OK'};
@@ -15,7 +19,7 @@ router.get('/health', async (ctx, next) => {
 });
 
 router.get('/oauth/slack', async (ctx, next) => {
-  ctx.redirect(`https://slack.com/oauth/authorize?client_id=${CLIENT_ID}&scope=bot,identify&redirect_uri=${config.endpoint}/oauth/slack/callback`);
+  ctx.redirect(`https://slack.com/oauth/authorize?client_id=${CLIENT_ID}&scope=bot,incoming-webhook&redirect_uri=${config.endpoint}/oauth/slack/callback`);
   ctx.status = 302;
 });
 
@@ -38,15 +42,22 @@ router.get('/oauth/slack/callback', async (ctx, next) => {
 }
      */
     let jsonRes = JSON.parse(res.body);
-    process.env.SLACK_TOKEN = jsonRes.bot.bot_access_token;
-    require('./main');
+    botAccessToken = jsonRes.bot.bot_access_token;
+    targetChannelId = jsonRes.incoming_webhook.channel_id;
   });
+  ctx.redirect('/oauth/finish');
+  ctx.status = 302;
+});
+
+router.get('/oauth/finish', async (ctx, netx) => {
   ctx.status = 200;
   ctx.body = 'Thank you for installing Botsketeer';
 });
 
 //todo Cron every 24h and once a day max, call report
-
+router.get('/report', async (ctx, next) => {
+  Reporter.start({botAccessToken, targetChannelId});
+});
 
 app
   .use(router.routes())
