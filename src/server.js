@@ -4,26 +4,25 @@ const request = require('request');
 const app = new Koa();
 const router = new Router();
 
+const config = require('./config');
+
 const CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
-console.log(CLIENT_ID);
+
 router.get('/health', async (ctx, next) => {
   ctx.body = {status: 'OK'};
   ctx.status = 200;
 });
 
 router.get('/oauth/slack', async (ctx, next) => {
-  ctx.redirect(`https://slack.com/oauth/authorize?client_id=${CLIENT_ID}&scope=bot,identify&redirect_uri=http://localhost:3000/oauth/slack/callback`);
+  ctx.redirect(`https://slack.com/oauth/authorize?client_id=${CLIENT_ID}&scope=bot,identify&redirect_uri=${config.endpoint}/oauth/slack/callback`);
   ctx.status = 302;
 });
 
 router.get('/oauth/slack/callback', async (ctx, next) => {
   console.log(ctx.request.query);
   let {code, state} = ctx.request.query;
-
-  //ctx.redirect(`https://slack.com/app_redirect?app=${CLIENT_ID}`)
-  //ctx.status = 301;
-  request.get(`https://slack.com/api/oauth.access?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&code=${code}&redirect_uri=http://localhost:3000/oauth/slack/callback`, (err, res) => {
+  request.get(`https://slack.com/api/oauth.access?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&code=${code}&redirect_uri=${config.endpoint}/oauth/slack/callback`, (err, res) => {
     /*
     {
   "ok": true,
