@@ -6,7 +6,7 @@ const router = new Router();
 
 const CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
-
+console.log(CLIENT_ID);
 router.get('/health', async (ctx, next) => {
   ctx.body = {status: 'OK'};
   ctx.status = 200;
