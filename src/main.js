@@ -1,8 +1,8 @@
 const {WebClient, RtmClient, CLIENT_EVENTS, RTM_EVENTS, RTM_MESSAGE_SUBTYPES} = require('@slack/client');
-
+const redisManager = require('./utils/redis-manager');
 
 module.exports = {
-  start: function ({botAccessToken, targetChannelId}) {
+  start: async function ({botAccessToken, targetChannelId}) {
 
     //todo avoid starting new rtm session everytime we start reporting
     //todo closing session function
@@ -50,48 +50,56 @@ module.exports = {
       }
     });
 
-    rtm.on(RTM_EVENTS.MESSAGE, (rawMessage) => {
+    rtm.on(RTM_EVENTS.MESSAGE, async (rawMessage) => {
       if (rawMessage.type === RTM_EVENTS.MESSAGE && rawMessage.subtype !== RTM_MESSAGE_SUBTYPES.BOT_MESSAGE) {
 
-        if (conversations[rawMessage.user]) {
-          conversations[rawMessage.user].push(rawMessage.text);
+        const todayMidnight = new Date().setUTCHours(0, 0, 0, 0);
+        const hasDoneTodayReport = await redisManager.get(`${todayMidnight}_${rawMessage.user}`);
+
+        if (hasDoneTodayReport) {
+          webBot.chat.postMessage(rawMessage.channel, `Thanks but you've done your report already`);
         } else {
-          conversations[rawMessage.user] = [rawMessage.text];
-        }
+          if (conversations[rawMessage.user]) {
+            conversations[rawMessage.user].push(rawMessage.text);
+          } else {
+            conversations[rawMessage.user] = [rawMessage.text];
+          }
 
-        let conversationLength = conversations[rawMessage.user].length;
-        if (conversationLength === 1) {
-          webBot.chat.postMessage(rawMessage.channel, QUESTIONS[1]);
-        } else if (conversationLength === 2) {
-          webBot.chat.postMessage(rawMessage.channel, QUESTIONS[2]);
-        } else if (conversationLength === 3) {
-          webBot.chat.postMessage(rawMessage.channel, QUESTIONS[3]);
-        } else if (conversations[rawMessage.user].length === 4) {
-          let currentUser = membersChannel.find(m => m.id === rawMessage.user);
-          let messageText = `*${currentUser.real_name}* posted an update for *daily standup*`;
-          let messageOptions = {
-            as_user    : false, //Wants the tag "app" displayed
-            username   : currentUser.name,
-            icon_url   : currentUser.profile && currentUser.profile.image_48,
-            attachments: []
-          };
+          let conversationLength = conversations[rawMessage.user].length;
+          if (conversationLength === 1) {
+            webBot.chat.postMessage(rawMessage.channel, QUESTIONS[1]);
+          } else if (conversationLength === 2) {
+            webBot.chat.postMessage(rawMessage.channel, QUESTIONS[2]);
+          } else if (conversationLength === 3) {
+            webBot.chat.postMessage(rawMessage.channel, QUESTIONS[3]);
+          } else if (conversations[rawMessage.user].length === 4) {
+            let currentUser = membersChannel.find(m => m.id === rawMessage.user);
+            let messageText = `*${currentUser.real_name}* posted an update for *daily standup*`;
+            let messageOptions = {
+              as_user    : false, //Wants the tag "app" displayed
+              username   : currentUser.name,
+              icon_url   : currentUser.profile && currentUser.profile.image_48,
+              attachments: []
+            };
 
-          conversations[rawMessage.user].forEach((line, index) => {
-            if (line !== 'no' && line !== 'nope' && line !== 'not') {
-              messageOptions.attachments.push({
-                fallback: 'Required plain-text summary of the attachment.',
-                color   : ['#36a64f', '#4996ff', '#fff000', '#a91113'][index],
-                pretext : `*${QUESTIONS[index]}*`,
-                text    : line,
-              });
-            }
-          });
-          webBot.chat.postMessage(targetChannel.id, messageText, messageOptions)
-            .catch((err) => {
-              console.log(err);
+            conversations[rawMessage.user].forEach((line, index) => {
+              if (line !== 'no' && line !== 'nope' && line !== 'not') {
+                messageOptions.attachments.push({
+                  fallback: 'Required plain-text summary of the attachment.',
+                  color   : ['#36a64f', '#4996ff', '#fff000', '#a91113'][index],
+                  pretext : `*${QUESTIONS[index]}*`,
+                  text    : line,
+                });
+              }
             });
-          conversations[rawMessage.user] = [];
-          webBot.chat.postMessage(rawMessage.channel, `Great ! Thanks !`);
+            webBot.chat.postMessage(targetChannel.id, messageText, messageOptions)
+              .catch((err) => {
+                console.log(err);
+              });
+            conversations[rawMessage.user] = [];
+            await redisManager.set(`${todayMidnight}_${rawMessage.user}`, true, 24 * 3600);
+            webBot.chat.postMessage(rawMessage.channel, `Great ! Thanks !`);
+          }
         }
       }
     });

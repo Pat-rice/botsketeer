@@ -24,6 +24,7 @@
   "homepage": "https://github.com/Pat-rice/botsketeer#readme",
   "dependencies": {
     "@slack/client": "3.15.0",
+    "ioredis": "3.2.2",
     "koa": "2.4.1",
     "koa-router": "7.3.0",
     "request": "2.83.0"

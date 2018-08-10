@@ -7,11 +7,10 @@ const router = new Router();
 const config = require('./config');
 
 const Reporter = require('./main.js');
+const redisManager = require('./utils/redis-manager');
 
 const CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
-let botAccessToken;
-let targetChannelId;
 
 router.get('/health', async (ctx, next) => {
   ctx.body = {status: 'OK'};
@@ -25,8 +24,8 @@ router.get('/oauth/slack', async (ctx, next) => {
 
 router.get('/oauth/slack/callback', async (ctx, next) => {
   console.log(ctx.request.query);
-  let {code, state} = ctx.request.query;
-  request.get(`https://slack.com/api/oauth.access?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&code=${code}&redirect_uri=${config.endpoint}/oauth/slack/callback`, (err, res) => {
+  const {code, state} = ctx.request.query;
+  request.get(`https://slack.com/api/oauth.access?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&code=${code}&redirect_uri=${config.endpoint}/oauth/slack/callback`, async (err, res) => {
     /*
     {
   "ok": true,
@@ -41,9 +40,9 @@ router.get('/oauth/slack/callback', async (ctx, next) => {
   }
 }
      */
-    let jsonRes = JSON.parse(res.body);
-    botAccessToken = jsonRes.bot.bot_access_token;
-    targetChannelId = jsonRes.incoming_webhook.channel_id;
+    const jsonRes = JSON.parse(res.body);
+    await redisManager.set('botAccessToken', jsonRes.bot.bot_access_token);
+    await redisManager.set('targetChannelId', jsonRes.incoming_webhook.channel_id);
   });
   ctx.redirect('/oauth/finish');
   ctx.status = 302;
@@ -54,9 +53,17 @@ router.get('/oauth/finish', async (ctx, netx) => {
   ctx.body = 'Thank you for installing Botsketeer';
 });
 
-//todo Cron every 24h and once a day max, call report
 router.get('/report', async (ctx, next) => {
-  Reporter.start({botAccessToken, targetChannelId});
+  const botAccessToken = await redisManager.get('botAccessToken');
+  const targetChannelId = await redisManager.get('targetChannelId');
+  if (botAccessToken && targetChannelId) {
+    Reporter.start({botAccessToken, targetChannelId});
+    ctx.status = 200;
+  } else {
+    ctx.status = 400;
+    ctx.body = 'Missing slack credentials, bot access token or target channel id, please authentify your app';
+  }
+
 });
 
 app
