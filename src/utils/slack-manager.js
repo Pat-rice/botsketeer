@@ -2,11 +2,6 @@ const {WebClient, RtmClient, CLIENT_EVENTS, RTM_EVENTS, RTM_MESSAGE_SUBTYPES} = 
 
 class SlackManager {
 
-  constructor() {
-    this._web;
-    this._rtm;
-  }
-
   get web() {
     return this._web;
   }
@@ -24,7 +19,9 @@ class SlackManager {
   }
 
   close() {
-    this._rtm.disconnect();
+    if (this._rtm) {
+      this._rtm.disconnect();
+    }
   }
 
 }
