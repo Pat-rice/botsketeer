@@ -1,15 +1,11 @@
-const {WebClient, RtmClient, CLIENT_EVENTS, RTM_EVENTS, RTM_MESSAGE_SUBTYPES} = require('@slack/client');
+const {CLIENT_EVENTS, RTM_EVENTS, RTM_MESSAGE_SUBTYPES} = require('@slack/client');
 const redisManager = require('./utils/redis-manager');
+const slackManager = require('./utils/slack-manager');
 
 module.exports = {
-  start: async function ({botAccessToken, targetChannelId}) {
+  start: async function ({targetChannelId}) {
 
-    //todo avoid starting new rtm session everytime we start reporting
-    //todo closing session function
-
-    const token = botAccessToken;
-
-    const webBot = new WebClient(token);
+    const webBot = slackManager.web;
     const QUESTIONS = [
       `What did you do yesterday ?`,
       `What will you do today ?`,
@@ -26,10 +22,7 @@ module.exports = {
 
 // Initialize the RTM client with the recommended settings. Using the defaults for these
 // settings is deprecated.
-    const rtm = new RtmClient(token, {
-      dataStore    : false,
-      useRtmConnect: true,
-    });
+    const rtm = slackManager.rtm;
 
     rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (connectData) => {
       appData.botData = connectData.self;

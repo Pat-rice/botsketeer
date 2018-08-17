@@ -8,6 +8,7 @@ const config = require('./config');
 
 const Reporter = require('./main.js');
 const redisManager = require('./utils/redis-manager');
+const slackManager = require('./utils/slack-manager');
 
 const CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
@@ -50,20 +51,21 @@ router.get('/oauth/slack/callback', async (ctx, next) => {
 
 router.get('/oauth/finish', async (ctx, netx) => {
   ctx.status = 200;
-  ctx.body = 'Thank you for installing Botsketeer';
+  ctx.body = 'Thank you for installing Botsketeer, start a report by going to /report';
 });
 
 router.get('/report', async (ctx, next) => {
   const botAccessToken = await redisManager.get('botAccessToken');
   const targetChannelId = await redisManager.get('targetChannelId');
+  slackManager.close();
   if (botAccessToken && targetChannelId) {
-    Reporter.start({botAccessToken, targetChannelId});
+    slackManager.init(botAccessToken);
+    Reporter.start({targetChannelId});
     ctx.status = 200;
   } else {
     ctx.status = 400;
-    ctx.body = 'Missing slack credentials, bot access token or target channel id, please authentify your app';
+    ctx.body = 'Missing slack credentials, bot access token or target channel id, please authentify your app, go to /oauth/slack';
   }
-
 });
 
 app
