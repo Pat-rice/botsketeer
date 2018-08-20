@@ -118,6 +118,8 @@ module.exports = {
       .then((res) => {
         //Mapping user ids to direct message channels ids
         targetChannel.members.forEach((userId) => {
+          console.log(res.ims, targetChanne.members);
+          console.log(res.ims.find((im) => targetChannel.members.indexOf(im.user) !== -1).id);
           directMessagesChannels[userId] = res.ims.find((im) => targetChannel.members.indexOf(im.user) !== -1).id;
         });
 
