@@ -101,6 +101,7 @@ module.exports = {
     webBot.users.list()
       .then((res) => {
         //Get users linked to the app instead
+        console.log('got users list', JSON.stringify(res.members));
         membersDirectory = res.members.filter((u) => !u.deleted && !u.is_bot && u.name !== 'slackbot');
         return webBot.channels.list();
       })

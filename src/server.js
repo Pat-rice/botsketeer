@@ -60,6 +60,7 @@ router.get('/report', async (ctx, next) => {
   slackManager.close();
   if (botAccessToken && targetChannelId) {
     slackManager.init(botAccessToken);
+    console.log('will start reporting');
     Reporter.start({targetChannelId});
     ctx.status = 200;
   } else {
