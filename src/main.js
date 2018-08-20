@@ -39,7 +39,8 @@ module.exports = {
     rtm.on(RTM_EVENTS.PRESENCE_CHANGE, (userPresence) => {
       let currentUser = membersChannel.find((u) => u.id === userPresence.user);
       if (currentUser && userPresence.presence === 'active' && !conversations[currentUser.id]) {
-        console.log('would push messages', directMessagesChannels[currentUser.id], `Hello ${currentUser.profile.first_name} !`);
+        console.log('has channels keys', Object.keys(directMessagesChannels));
+        console.log('would push messages', currentUser.id, directMessagesChannels[currentUser.id], `Hello ${currentUser.profile.first_name} !`);
         // webBot.chat.postMessage(directMessagesChannels[currentUser.id], `Hello ${currentUser.profile.first_name} ! It's time for our standup meeting!\n ${QUESTIONS[0]}`);
       }
     });
