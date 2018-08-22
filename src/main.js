@@ -76,7 +76,13 @@ module.exports = {
             };
 
             conversations[rawMessage.user].forEach((line, index) => {
-              if (line !== 'no' && line !== 'nope' && line !== 'not') {
+              if (
+                line.toLowerCase() !== 'no'
+                && line.toLowerCase() !== 'nope'
+                && line.toLowerCase() !== 'not'
+                && line.toLowerCase() !== '-'
+                && line.toLowerCase() !== 'none'
+              ) {
                 messageOptions.attachments.push({
                   fallback: 'Required plain-text summary of the attachment.',
                   color   : ['#36a64f', '#4996ff', '#fff000', '#a91113'][index],
