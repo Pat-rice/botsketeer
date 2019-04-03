@@ -115,6 +115,7 @@ module.exports = {
         targetChannel = res.channels.find((channel) => {
           return channel.id === targetChannelId;
         });
+        console.log('found target channel', JSON.stringify(targetChannel));
         membersChannel = membersDirectory.filter(u => targetChannel.members.indexOf(u.id) !== -1);
 
         return webBot.im.list();
